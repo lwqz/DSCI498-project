@@ -55,9 +55,13 @@ generator = Generator(latent_dim, 16 * 16 * 3).to(device)
 discriminator_optimizer = optim.Adam(discriminator.parameters(), lr=learning_rate_D, betas=(0.5, 0.999))
 generator_optimizer = optim.Adam(generator.parameters(), lr=learning_rate_G, betas=(0.5, 0.999))
 
+# start_epoch = 150
+# generator.load_state_dict(torch.load(f"{CHECKPOINT_DIR}/generator_epoch_150.pth"))
+# discriminator.load_state_dict(torch.load(f"{CHECKPOINT_DIR}/discriminator_epoch_150.pth"))
+# print(f"Loaded checkpoint from epoch 150")
 
 # Training loop
-for epoch in range(num_epochs):
+for epoch in range( num_epochs):
     loss_discriminator: Any = None
     loss_generator: Any = None
     generated_samples: Tensor = torch.Tensor()
