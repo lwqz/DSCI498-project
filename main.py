@@ -1,4 +1,5 @@
 import torch
+import os
 import matplotlib.pyplot as plt
 from typing import Any
 from torchvision import transforms
@@ -11,6 +12,17 @@ from datasets.pixel_dataset import PixelDataset
 from models.generator import Generator
 from models.discriminator import Discriminator
 from utils.device import get_device
+
+
+CHECKPOINT_DIR = "checkpoints"
+os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+
+
+# Save model
+def save_checkpoint(epoch, generator, discriminator):
+    torch.save(generator.state_dict(), f"{CHECKPOINT_DIR}/generator_epoch_{epoch}.pth")
+    torch.save(discriminator.state_dict(), f"{CHECKPOINT_DIR}/discriminator_epoch_{epoch}.pth")
+    print(f"Saved checkpoint at epoch {epoch}")
 
 
 # Device
@@ -51,7 +63,7 @@ for epoch in range(num_epochs):
     generated_samples: Tensor = torch.Tensor()
     real_samples: Tensor = torch.Tensor()
 
-    for real_samples in train_loader:
+    for batch_idx, real_samples in enumerate(train_loader):
         real_samples = real_samples.to(device)
 
         # Labels
@@ -67,11 +79,14 @@ for epoch in range(num_epochs):
         all_labels = torch.cat((real_labels, fake_labels))
 
         # Train Discriminator
-        discriminator.zero_grad()
-        predictions = discriminator(all_samples)
-        loss_discriminator = criterion(predictions, all_labels)
-        loss_discriminator.backward()
-        discriminator_optimizer.step()
+        if batch_idx % 2 == 0:
+            discriminator.zero_grad()
+            all_samples = torch.cat((real_samples, fake_samples))
+            all_labels = torch.cat((real_labels, fake_labels))
+            predictions = discriminator(all_samples)
+            loss_discriminator = criterion(predictions, all_labels)
+            loss_discriminator.backward()
+            discriminator_optimizer.step()
 
         # Train Generator
         latent_space = torch.randn((train_batch_size, latent_dim), device=device)
@@ -83,6 +98,10 @@ for epoch in range(num_epochs):
         generator_optimizer.step()
 
     print(f"Epoch: {epoch} | Loss D.: {loss_discriminator:.4f} | Loss G.: {loss_generator:.4f}")
+
+    # 每 50 epoch 保存一次 checkpoint
+    if epoch % 50 == 0 and epoch != 0:
+        save_checkpoint(epoch, generator, discriminator)
 
     # Visualization every 5 epochs
     if epoch % 5 == 0:
