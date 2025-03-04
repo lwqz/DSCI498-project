@@ -1,0 +1,2 @@
+This project uses a Generative Adversarial Network (GAN) to create 16×16 pixel-style images.
+Through adversarial training, the generator improves the realism of generated images while the discriminator learns to distinguish real from fake.
